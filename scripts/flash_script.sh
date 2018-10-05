@@ -38,7 +38,7 @@ setup_flashable
 ##########################################################################################
 
 ui_print "************************"
-ui_print "* Magisk v$MAGISK_VER Installer"
+ui_print "* Magisk v$MAGISK_VER 安装包"
 ui_print "************************"
 
 is_mounted /data || mount /data || is_mounted /cache || mount /cache || abort "! Unable to mount partitions"
@@ -49,16 +49,16 @@ find_dtbo_image
 
 get_flags
 
-[ -z $BOOTIMAGE ] && abort "! Unable to detect target image"
-ui_print "- Target image: $BOOTIMAGE"
-[ -z $DTBOIMAGE ] || ui_print "- DTBO image: $DTBOIMAGE"
+[ -z $BOOTIMAGE ] && abort "! 无法检测目标镜像！"
+ui_print "- 目标镜像: $BOOTIMAGE"
+[ -z $DTBOIMAGE ] || ui_print "- DTBO镜像: $DTBOIMAGE"
 
 # Detect version and architecture
 api_level_arch_detect
 
-[ $API -lt 21 ] && abort "! Magisk is only for Lollipop and above (5.0+) (SDK 21+)"
+[ $API -lt 21 ] && abort "! Magisk 只支持 Android L (5.0,SDK Version 21) 以上的系统！"
 
-ui_print "- Device platform: $ARCH"
+ui_print "- 设备架构: $ARCH"
 
 BINDIR=$INSTALLER/$ARCH32
 chmod -R 755 $CHROMEDIR $BINDIR
@@ -70,7 +70,7 @@ remove_system_su
 # Environment
 ##########################################################################################
 
-ui_print "- Constructing environment"
+ui_print "- 搭建环境......"
 
 check_data
 
@@ -90,7 +90,7 @@ chmod -R 755 $MAGISKBIN
 
 # addon.d
 if [ -d /system/addon.d ]; then
-  ui_print "- Adding addon.d survival script"
+  ui_print "- 加入 addon.d 脚本......"
   mount -o rw,remount /system
   ADDOND=/system/addon.d/99-magisk.sh
   echo '#!/sbin/sh' > $ADDOND
@@ -106,7 +106,7 @@ $BOOTMODE || recovery_actions
 ##########################################################################################
 
 eval $BOOTSIGNER -verify < $BOOTIMAGE && BOOTSIGNED=true
-$BOOTSIGNED && ui_print "- Boot image is signed with AVB 1.0"
+$BOOTSIGNED && ui_print "- Boot 镜像已以 AVB 1.0 的方式进行签名"
 
 SOURCEDMODE=true
 cd $MAGISKBIN
@@ -114,8 +114,8 @@ cd $MAGISKBIN
 # Source the boot patcher
 . ./boot_patch.sh "$BOOTIMAGE"
 
-ui_print "- Flashing new boot image"
-flash_image new-boot.img "$BOOTIMAGE" || abort "! Insufficient partition size"
+ui_print "- 刷入新的 Boot 镜像中......"
+flash_image new-boot.img "$BOOTIMAGE" || abort "! 分区空间不足！"
 rm -f new-boot.img
 
 if [ -f stock_boot* ]; then
@@ -135,5 +135,5 @@ cd /
 $BOOTMODE || recovery_cleanup
 rm -rf $TMPDIR
 
-ui_print "- Done"
+ui_print "- Magisk v$MAGISK_VER 已安装到你的设备上！"
 exit 0

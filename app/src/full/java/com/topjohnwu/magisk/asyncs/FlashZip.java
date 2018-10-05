@@ -47,7 +47,7 @@ public class FlashZip extends ParallelTask<Void, Void, Integer> {
     protected Integer doInBackground(Void... voids) {
         MagiskManager mm = Data.MM();
         try {
-            console.add("- Copying zip to temp directory");
+            console.add("- 复制文件到临时文件夹......");
 
             mCachedFile.delete();
             try (
@@ -58,14 +58,14 @@ public class FlashZip extends ParallelTask<Void, Void, Integer> {
                 InputStream buf= new BufferedInputStream(in);
                 ShellUtils.pump(buf, out);
             } catch (FileNotFoundException e) {
-                console.add("! Invalid Uri");
+                console.add("! tan90°的URL！");
                 throw e;
             } catch (IOException e) {
-                console.add("! Cannot copy to cache");
+                console.add("! 无法将文件复制到缓存中！");
                 throw e;
             }
             if (!unzipAndCheck()) return 0;
-            console.add("- Installing " + Utils.getNameFromUri(mm, mUri));
+            console.add("- 安装中...... " + Utils.getNameFromUri(mm, mUri));
             if (!Shell.su("cd " + mCachedFile.getParent(),
                     "BOOTMODE=true sh update-binary dummy 1 " + mCachedFile)
                     .to(console, logs)
@@ -76,7 +76,7 @@ public class FlashZip extends ParallelTask<Void, Void, Integer> {
             e.printStackTrace();
             return -1;
         }
-        console.add("- All done!");
+        console.add("- 安装完毕！重启以生效！");
         return 1;
     }
 
@@ -87,11 +87,11 @@ public class FlashZip extends ParallelTask<Void, Void, Integer> {
         Shell.su("rm -rf " + mCachedFile.getParent(), "rm -rf " + Const.TMP_FOLDER_PATH).submit();
         switch (result) {
             case -1:
-                console.add("! Installation failed");
+                console.add("! 安装失败！");
                 SnackbarMaker.showUri(getActivity(), mUri);
                 break;
             case 0:
-                console.add("! This zip is not a Magisk Module!");
+                console.add("! 这个zip文件并不是 Magisk Module!");
                 break;
             case 1:
                 // Reload modules

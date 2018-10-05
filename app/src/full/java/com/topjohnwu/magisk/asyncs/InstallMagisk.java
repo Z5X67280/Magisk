@@ -135,7 +135,7 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
         BufferedInputStream buf;
 
         if (!ShellUtils.checkSum("MD5", zip, Data.magiskMD5)) {
-            console.add("- Downloading zip");
+            console.add("- 下载Magisk Flashable Zip中......");
             HttpURLConnection conn = WebService.mustRequest(Data.magiskLink, null);
             buf = new BufferedInputStream(new ProgressStream(conn), conn.getContentLength());
             buf.mark(conn.getContentLength() + 1);
@@ -145,12 +145,12 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
             buf.reset();
             conn.disconnect();
         } else {
-            console.add("- Existing zip found");
+            console.add("- 找到了zip文件");
             buf = new BufferedInputStream(new FileInputStream(zip), (int) zip.length());
             buf.mark((int) zip.length() + 1);
         }
 
-        console.add("- Extracting files");
+        console.add("- 解压文件");
         try (InputStream in = buf) {
             ZipUtils.unzip(in, installDir, arch + "/", true);
             in.reset();
@@ -160,7 +160,7 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
             in.reset();
             ZipUtils.unzip(in, installDir, "META-INF/com/google/android/update-binary", true);
         } catch (IOException e) {
-            console.add("! Cannot unzip zip");
+            console.add("! 无法解压zip文件！请检查权限！");
             throw e;
         }
         Shell.sh(Utils.fmt("chmod -R 755 %s/*; %s/magiskinit -x magisk %s/magisk",
@@ -168,7 +168,7 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
     }
 
     private boolean dumpBoot() {
-        console.add("- Copying image to cache");
+        console.add("- 复制镜像到临时文件夹");
         // Copy boot image to local
         try (InputStream in = mm.getContentResolver().openInputStream(bootUri);
              OutputStream out = new FileOutputStream(mBoot)
@@ -192,10 +192,10 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
             }
             ShellUtils.pump(src, out);
         } catch (FileNotFoundException e) {
-            console.add("! Invalid Uri");
+            console.add("! tan90°的链接（URL）！");
             return false;
         } catch (IOException e) {
-            console.add("! Copy failed");
+            console.add("! 复制失败！请检查权限！");
             return false;
         }
         return true;
@@ -206,10 +206,10 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
         try (InputStream in = new SuFileInputStream(mBoot)) {
             isSigned = SignBoot.verifySignature(in, null);
             if (isSigned) {
-                console.add("- Boot image is signed with AVB 1.0");
+                console.add("- Boot 镜像已使用 AVB 1.0 进行签名");
             }
         } catch (IOException e) {
-            console.add("! Unable to check signature");
+            console.add("! 无法检测签名！");
             throw e;
         }
 
@@ -226,7 +226,7 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
 
         File patched = new File(installDir, "new-boot.img");
         if (isSigned) {
-            console.add("- Signing boot image with test keys");
+            console.add("- Boot 镜像已使用 testkey 进行签名！");
             File signed = new File(installDir, "signed.img");
             try (InputStream in = new SuFileInputStream(patched);
                  OutputStream out = new BufferedOutputStream(new FileOutputStream(signed))
@@ -263,7 +263,7 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
                 Shell.sh("rm -f " + patched).exec();
                 console.add("");
                 console.add("****************************");
-                console.add(" Patched image is placed in ");
+                console.add(" 打补丁的镜像已存在于： ");
                 console.add(" " + dest + " ");
                 console.add("****************************");
                 break;
@@ -286,7 +286,7 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
             ShellUtils.pump(in, out);
             Shell.su("post_ota " + bootctl.getParent()).exec();
             console.add("***************************************");
-            console.add(" Next reboot will boot to second slot!");
+            console.add(" 下一次重启将会重启到 Slot 2！");
             console.add("***************************************");
         } catch (IOException e) {
             e.printStackTrace();
@@ -315,14 +315,14 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
                     return false;
                 break;
             case DIRECT_MODE:
-                console.add("- Detecting target image");
+                console.add("- 检测Boot 镜像 Target......");
                 mBoot = ShellUtils.fastCmd("find_boot_image", "echo \"$BOOTIMAGE\"");
                 break;
             case SECOND_SLOT_MODE:
                 String slot = ShellUtils.fastCmd("echo $SLOT");
                 String target = (TextUtils.equals(slot, "_a") ? "_b" : "_a");
-                console.add("- Target slot: " + target);
-                console.add("- Detecting target image");
+                console.add("- Target Slot: " + target);
+                console.add("- 检测Boot 镜像 Target......");
                 mBoot = ShellUtils.fastCmd(
                         "SLOT=" + target,
                         "find_boot_image",
@@ -335,12 +335,12 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
                 break;
         }
         if (mBoot == null) {
-            console.add("! Unable to detect target image");
+            console.add("! 无法检测Boot 镜像 Target！");
             return false;
         }
 
         if (mode == DIRECT_MODE || mode == SECOND_SLOT_MODE)
-            console.add("- Target image: " + mBoot);
+            console.add("- 镜像Target: " + mBoot);
 
         List<String> abis = Arrays.asList(Build.SUPPORTED_ABIS);
         String arch;
@@ -356,7 +356,7 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
             else arch = "arm";
         }
 
-        console.add("- Device platform: " + Build.SUPPORTED_ABIS[0]);
+        console.add("- 设备架构: " + Build.SUPPORTED_ABIS[0]);
 
         try {
             extractFiles(arch);
@@ -370,7 +370,7 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
                     return false;
                 if (mode == SECOND_SLOT_MODE)
                     postOTA();
-                console.add("- All done!");
+                console.add("- 安装完成！ :-)");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -389,7 +389,7 @@ public class InstallMagisk extends ParallelTask<Void, Void, Boolean> {
             FlashActivity activity = (FlashActivity) getActivity();
             if (!result) {
                 Shell.sh("rm -rf " + installDir).submit();
-                console.add("! Installation failed");
+                console.add("! 安装失败 :-(");
                 activity.reboot.setVisibility(View.GONE);
             }
             activity.buttonPanel.setVisibility(View.VISIBLE);
